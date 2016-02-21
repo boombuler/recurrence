@@ -22,6 +22,11 @@ func TestMonthly(t *testing.T) {
 				event := r.GetNextDate(event)
 				So(event, ShouldHappenOn, time.Date(2016, 4, 1, 12, 0, 0, 0, time.UTC))
 			})
+			Convey("With the recurrence end in february there should be no second event", func() {
+				r.End = time.Date(2016, 2, 1, 0, 0, 0, 0, time.UTC)
+				event := r.GetNextDate(event)
+				So(event, ShouldNotHappen)
+			})
 		})
 	})
 	Convey("With a monthly recurrence on the 31 of each month", t, func() {
