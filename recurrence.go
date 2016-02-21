@@ -6,7 +6,7 @@ import (
 
 type Recurrence struct {
 	Type      Type
-	Frequence int
+	Frequence uint
 	Pattern   int
 
 	Start    time.Time

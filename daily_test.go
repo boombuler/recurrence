@@ -19,6 +19,16 @@ func TestInvalid(t *testing.T) {
 			So(nextEvent, ShouldNotHappen)
 		})
 	})
+	Convey("A daily recurrence without a frequence should act like every day", t, func() {
+		r := Recurrence{
+			Type:      Daily,
+			Frequence: 0,
+			Location:  time.UTC,
+			Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC),
+		}
+		event := r.GetNextDate(time.Date(2016, 1, 3, 12, 0, 0, 0, time.UTC))
+		So(event, ShouldHappenOn, time.Date(2016, 1, 4, 12, 0, 0, 0, time.UTC))
+	})
 }
 
 func TestDailyEvery5Days(t *testing.T) {

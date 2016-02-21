@@ -40,9 +40,7 @@ func TestWeeklyPatternToInt(t *testing.T) {
 func TestWeeklyPattern(t *testing.T) {
 	Convey("In berlin", t, func() {
 		local, err := time.LoadLocation("Europe/Berlin")
-		if err != nil {
-			t.Errorf("Failed to load local: %s", err)
-		}
+		So(err, ShouldBeNil)
 
 		Convey("With a weekly recurrence that happens every two weeks on monday and saturday", func() {
 			r := Recurrence{

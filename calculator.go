@@ -9,6 +9,9 @@ const (
 )
 
 func (p Recurrence) GetNextDate(d time.Time) time.Time {
+	if p.Frequence == 0 {
+		p.Frequence = 1
+	}
 	switch p.Type {
 	case Daily:
 		return p.ndDaily(d)
@@ -40,8 +43,8 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 	dateOfD := p.dateOf(d)
 
 	daysBetween := int(dateOfD.Sub(startDate) / day)
-
-	daysToAdd := (p.Frequence - (daysBetween % p.Frequence)) % p.Frequence
+	freq := int(p.Frequence)
+	daysToAdd := (freq - (daysBetween % freq)) % freq
 
 	res := dateOfD.Add(time.Duration(daysToAdd)*day + timeOfDay)
 
