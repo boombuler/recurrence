@@ -12,6 +12,8 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 	switch p.Type {
 	case Daily:
 		return p.ndDaily(d)
+	case Weekly:
+		return p.ndWeekly(d)
 	}
 	return time.Time{}
 }
@@ -50,4 +52,53 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 		return time.Time{}
 	}
 	return res
+}
+
+func (p Recurrence) ndWeekly(d time.Time) time.Time {
+	start := p.Start.In(p.Location)
+	end := p.End.In(p.Location)
+	if end.After(start) && d.After(end) {
+		return time.Time{}
+	}
+	d = d.In(p.Location)
+
+	startDate := p.dateOf(start)
+	timeOfDay := start.Sub(startDate)
+
+	startOfWeek, _ := IntToWeeklyPattern(p.Pattern)
+	days := p.Pattern & 255
+
+	weekStart := startDate.Add(time.Duration(-(7+int(start.Weekday()-startOfWeek))%7) * day)
+	if d.Before(weekStart) {
+		d = weekStart
+	}
+	cycleLength := time.Duration(p.Frequence*7) * day
+
+	// Skip already passed cycles.
+	weekStart = weekStart.Add(time.Duration(int(d.Sub(weekStart)/cycleLength)) * cycleLength)
+	dayOfD := p.dateOf(d)
+
+	for ws := weekStart; end.Before(start) || !end.Before(ws); ws = ws.Add(cycleLength) {
+		for i := 0; i < 7; i++ {
+			dat := ws.Add(time.Duration(i) * day)
+			if dat.Before(dayOfD) || dat.Before(startDate) {
+				continue
+			}
+
+			wd := int(1 << uint(dat.Weekday()))
+			if (days & wd) != wd {
+				continue
+			}
+			dat = dat.Add(timeOfDay)
+			if dat.Before(d) {
+				continue
+			}
+			if end.After(start) && dat.After(end) {
+				return time.Time{}
+			}
+			return dat
+		}
+	}
+
+	return time.Time{}
 }
