@@ -1,64 +1,84 @@
 package recurrence
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
 )
 
-func Test_WeeklyPatternToInt(t *testing.T) {
-	if r := WeeklyPatternToInt(time.Sunday, time.Sunday); r != 1 {
-		t.Errorf("Sunday failed. Got %v", r)
-	}
-	if r := WeeklyPatternToInt(time.Sunday, time.Monday); r != 2 {
-		t.Errorf("Monday failed. Got %v", r)
-	}
-	if r := WeeklyPatternToInt(time.Sunday, time.Sunday, time.Monday); r != 3 {
-		t.Errorf("Sunday,Monday failed. Got %v", r)
-	}
-	if r := WeeklyPatternToInt(time.Sunday, time.Sunday, time.Sunday); r != 1 {
-		t.Errorf("Sunday,Sunday failed. Got %v", r)
-	}
-	if r := WeeklyPatternToInt(time.Sunday, time.Sunday, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday); r != 127 {
-		t.Errorf("All-Days failed. Got %v", r)
-	}
-
-	if r := WeeklyPatternToInt(time.Monday, time.Sunday); r != 257 {
-		t.Error("FirstDayOfWeek Monday encoding failed")
-	}
-	if r := WeeklyPatternToInt(time.Tuesday, time.Sunday); r != 513 {
-		t.Error("FirstDayOfWeek Tuesday encoding failed")
-	}
+func TestWeeklyPatternToInt(t *testing.T) {
+	Convey("With sunday as first day of week", t, func() {
+		startOfWeek := time.Sunday
+		Convey("sunday should encode to 1", func() {
+			So(WeeklyPatternToInt(startOfWeek, time.Sunday), ShouldEqual, 1)
+		})
+		Convey("monday should encode to 2", func() {
+			So(WeeklyPatternToInt(startOfWeek, time.Monday), ShouldEqual, 2)
+		})
+		Convey("sunday and mondy should encode to 3", func() {
+			So(WeeklyPatternToInt(startOfWeek, time.Sunday, time.Monday), ShouldEqual, 3)
+		})
+		Convey("passing the same day twice should not change the result", func() {
+			So(WeeklyPatternToInt(startOfWeek, time.Sunday, time.Sunday), ShouldEqual, 1)
+		})
+		Convey("passing all days should encode to 127", func() {
+			So(WeeklyPatternToInt(time.Sunday, time.Sunday, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday), ShouldEqual, 127)
+		})
+	})
+	Convey("With monday as first day of week", t, func() {
+		Convey("sunday should encode to 257", func() {
+			So(WeeklyPatternToInt(time.Monday, time.Sunday), ShouldEqual, 257)
+		})
+	})
+	Convey("With tuesday as first day of week", t, func() {
+		Convey("sunday should encode to 513", func() {
+			So(WeeklyPatternToInt(time.Tuesday, time.Sunday), ShouldEqual, 513)
+		})
+	})
 }
 
-func Test_WeeklyPattern(t *testing.T) {
-	local, err := time.LoadLocation("Europe/Berlin")
-	if err != nil {
-		t.Errorf("Failed to load local: %s", err)
-	}
-	r := Recurrence{
-		Type:      Weekly,
-		Location:  local,
-		Frequence: 2, // Every 2 weeks
-		Pattern:   WeeklyPatternToInt(time.Monday, time.Monday, time.Saturday),
-		Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, local),
-		End:       time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC),
-	}
-	tests := map[time.Time]time.Time{
-		time.Date(2017, 1, 3, 0, 0, 0, 0, time.UTC):   time.Time{},
-		time.Date(2015, 12, 12, 0, 0, 0, 0, time.UTC): time.Date(2016, 1, 2, 12, 0, 0, 0, local),
-		time.Date(2016, 1, 3, 0, 0, 0, 0, time.UTC):   time.Date(2016, 1, 11, 12, 0, 0, 0, local),
-		time.Date(2016, 2, 7, 0, 0, 0, 0, time.UTC):   time.Date(2016, 2, 8, 12, 0, 0, 0, local),
-	}
-
-	for d, expected := range tests {
-		result := r.GetNextDate(d)
-		if result != expected {
-			t.Errorf("Failed for %v. Got %v expected %v", d, result, expected)
+func TestWeeklyPattern(t *testing.T) {
+	Convey("In berlin", t, func() {
+		local, err := time.LoadLocation("Europe/Berlin")
+		if err != nil {
+			t.Errorf("Failed to load local: %s", err)
 		}
-	}
 
-	r.End = time.Time{}
-	if dat := r.GetNextDate(time.Date(2017, 1, 1, 1, 0, 0, 0, time.UTC)); dat != time.Date(2017, 1, 9, 12, 0, 0, 0, local) {
-		t.Error("no-end-date failed. Got", dat)
-	}
+		Convey("With a weekly recurrence that happens every two weeks on monday and saturday", func() {
+			r := Recurrence{
+				Type:      Weekly,
+				Location:  local,
+				Frequence: 2, // Every 2 weeks
+				Pattern:   WeeklyPatternToInt(time.Monday, time.Monday, time.Saturday),
+				Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, local),
+			}
+			Convey("and an end in 2017", func() {
+				r.End = time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC)
+				Convey("there should be no recurrence in 2017", func() {
+					nextEvent := r.GetNextDate(time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldNotHappen)
+				})
+				Convey("the first event should be on 2nd january", func() {
+					nextEvent := r.GetNextDate(time.Date(2015, 12, 31, 0, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldHappenOn, time.Date(2016, 1, 2, 12, 0, 0, 0, local))
+				})
+				Convey("the second event 11th january", func() {
+					nextEvent := r.GetNextDate(time.Date(2016, 1, 2, 13, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldHappenOn, time.Date(2016, 1, 11, 12, 0, 0, 0, local))
+				})
+				Convey("there should be another event on 12th feburary", func() {
+					nextEvent := r.GetNextDate(time.Date(2016, 2, 7, 0, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldHappenOn, time.Date(2016, 2, 8, 12, 0, 0, 0, local))
+				})
+			})
+
+			Convey("without an enddate", func() {
+				r.End = time.Time{}
+				Convey("there should be an event in 2017", func() {
+					nextEvent := r.GetNextDate(time.Date(2017, 1, 1, 1, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldHappenOn, time.Date(2017, 1, 9, 12, 0, 0, 0, local))
+				})
+			})
+		})
+	})
 }
