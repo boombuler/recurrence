@@ -6,6 +6,21 @@ import (
 	"time"
 )
 
+func TestInvalid(t *testing.T) {
+	Convey("With an invalid recurrence type", t, func() {
+		r := Recurrence{
+			Type:      Type(999),
+			Frequence: 5,
+			Location:  time.UTC,
+			Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC),
+		}
+		Convey("the there should be no event", func() {
+			nextEvent := r.GetNextDate(time.Now())
+			So(nextEvent, ShouldNotHappen)
+		})
+	})
+}
+
 func TestDailyEvery5Days(t *testing.T) {
 	Convey("With a daily event every 5 days", t, func() {
 		r := Recurrence{

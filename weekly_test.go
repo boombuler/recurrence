@@ -52,14 +52,18 @@ func TestWeeklyPattern(t *testing.T) {
 				Pattern:   WeeklyPatternToInt(time.Monday, time.Monday, time.Saturday),
 				Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, local),
 			}
-			Convey("and an end in 2017", func() {
-				r.End = time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC)
-				Convey("there should be no recurrence in 2017", func() {
-					nextEvent := r.GetNextDate(time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC))
+			Convey("and an end in early 2017", func() {
+				r.End = time.Date(2017, 1, 12, 23, 59, 0, 0, time.UTC)
+				Convey("there should be no event after the end", func() {
+					nextEvent := r.GetNextDate(r.End)
+					So(nextEvent, ShouldNotHappen)
+				})
+				Convey("there should be no after 10th january 2017", func() {
+					nextEvent := r.GetNextDate(time.Date(2017, 1, 10, 0, 0, 0, 0, time.UTC))
 					So(nextEvent, ShouldNotHappen)
 				})
 				Convey("the first event should be on 2nd january", func() {
-					nextEvent := r.GetNextDate(time.Date(2015, 12, 31, 0, 0, 0, 0, time.UTC))
+					nextEvent := r.GetNextDate(time.Date(2015, 12, 1, 0, 0, 0, 0, time.UTC))
 					So(nextEvent, ShouldHappenOn, time.Date(2016, 1, 2, 12, 0, 0, 0, local))
 				})
 				Convey("the second event 11th january", func() {

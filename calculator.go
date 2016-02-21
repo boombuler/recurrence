@@ -57,7 +57,7 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 func (p Recurrence) ndWeekly(d time.Time) time.Time {
 	start := p.Start.In(p.Location)
 	end := p.End.In(p.Location)
-	if end.After(start) && d.After(end) {
+	if end.After(start) && !end.After(d) {
 		return time.Time{}
 	}
 	d = d.In(p.Location)
@@ -99,6 +99,6 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 			return dat
 		}
 	}
-
+	// This should not happen...
 	return time.Time{}
 }
