@@ -119,5 +119,12 @@ func TestMonthly(t *testing.T) {
 			event := r.GetNextDate(time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC))
 			So(event, ShouldHappenOn, time.Date(2016, 2, 5, 12, 0, 0, 0, time.UTC))
 		})
+		Convey("With end-date", func() {
+			r.End = time.Date(2016, 2, 1, 0, 0, 0, 0, time.UTC)
+			Convey("There should be no event after the end", func() {
+				event := r.GetNextDate(time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC))
+				So(event, ShouldNotHappen)
+			})
+		})
 	})
 }
