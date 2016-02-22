@@ -15,6 +15,10 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 	if p.Location == nil {
 		p.Location = time.UTC
 	}
+	if p.End.After(p.End) && !p.End.After(d) {
+		return time.Time{}
+	}
+
 	switch p.Frequence {
 	case NotRepeating:
 		if p.Start.After(d) {
@@ -24,6 +28,8 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 		return p.ndDaily(d)
 	case Weekly:
 		return p.ndWeekly(d)
+	case MonthlyXth:
+		return p.ndMonthlyX(d)
 	}
 	return time.Time{}
 }
@@ -36,9 +42,7 @@ func (p Recurrence) dateOf(t time.Time) time.Time {
 func (p Recurrence) ndDaily(d time.Time) time.Time {
 	start := p.Start.In(p.Location)
 	end := p.End.In(p.Location)
-	if end.After(start) && d.After(end) {
-		return time.Time{}
-	}
+
 	if d.Before(start) {
 		return start
 	}
@@ -67,9 +71,6 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 func (p Recurrence) ndWeekly(d time.Time) time.Time {
 	start := p.Start.In(p.Location)
 	end := p.End.In(p.Location)
-	if end.After(start) && !end.After(d) {
-		return time.Time{}
-	}
 	d = d.In(p.Location)
 
 	startDate := p.dateOf(start)
@@ -110,5 +111,39 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 		}
 	}
 	// This should not happen...
+	return time.Time{}
+}
+
+func (p Recurrence) ndMonthlyX(d time.Time) time.Time {
+	start := p.Start.In(p.Location)
+	end := p.End.In(p.Location)
+	d = d.In(p.Location)
+	if d.Before(start) {
+		return start
+	}
+
+	dy := d.Year()
+	dm := int(d.Month())
+
+	sy := start.Year()
+	sm := int(start.Month())
+
+	interval := int(p.Interval)
+
+	monthsBetween := ((dy - sy) * 12) + (dm - sm)
+	monthsToAdd := (monthsBetween / interval) * interval
+	extraIntervals := 0
+
+	for dat := start.AddDate(0, monthsToAdd, 0); end.Before(start) || !end.Before(dat); dat = start.AddDate(0, monthsToAdd+(extraIntervals*interval), 0) {
+		extraIntervals += 1
+		if dat.Day() != start.Day() {
+			continue
+		}
+		if !dat.After(d) {
+			continue
+		}
+		return dat
+	}
+
 	return time.Time{}
 }

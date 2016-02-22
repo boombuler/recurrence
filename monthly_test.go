@@ -45,4 +45,20 @@ func TestMonthly(t *testing.T) {
 			So(event, ShouldHappenOn, time.Date(2016, 3, 31, 12, 0, 0, 0, time.UTC))
 		})
 	})
+	Convey("With a monthly recurrence on the 1st every 3 months starting in november", t, func() {
+		start := time.Date(2016, 11, 1, 12, 0, 0, 0, time.UTC)
+		r := Recurrence{
+			Frequence: MonthlyXth,
+			Location:  time.UTC,
+			Interval:  3,
+			Start:     start,
+		}
+		Convey("There should be an occurrence on every 1st february", func() {
+			for year := 2017; year < 2027; year++ {
+				startOfYear := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+				event := r.GetNextDate(startOfYear)
+				So(event, ShouldHappenOn, time.Date(year, 2, 1, 12, 0, 0, 0, time.UTC))
+			}
+		})
+	})
 }
