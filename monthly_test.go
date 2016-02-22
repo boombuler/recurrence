@@ -7,9 +7,9 @@ import (
 )
 
 func TestMonthly(t *testing.T) {
-	Convey("With a monthly recurrence on the first day every 3 months", t, func() {
+	Convey("With a monthly recurrence on the 1st day every 3 months", t, func() {
 		r := Recurrence{
-			Frequence: Monthly,
+			Frequence: MonthlyXth,
 			Location:  time.UTC,
 			Interval:  3,
 			Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, time.UTC),
@@ -29,9 +29,9 @@ func TestMonthly(t *testing.T) {
 			})
 		})
 	})
-	Convey("With a monthly recurrence on the 31 of each month", t, func() {
+	Convey("With a monthly recurrence on the 31th of each month", t, func() {
 		r := Recurrence{
-			Frequence: Monthly,
+			Frequence: MonthlyXth,
 			Location:  time.UTC,
 			Interval:  1,
 			Start:     time.Date(2016, 1, 31, 12, 0, 0, 0, time.UTC),
