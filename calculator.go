@@ -15,7 +15,7 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 	if p.Location == nil {
 		p.Location = time.UTC
 	}
-	if p.End.After(p.End) && !p.End.After(d) {
+	if p.End.After(p.Start) && !p.End.After(d) {
 		return time.Time{}
 	}
 
@@ -30,6 +30,8 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 		return p.ndWeekly(d)
 	case MonthlyXth:
 		return p.ndMonthlyX(d)
+	case Monthly:
+		return p.ndMonthly(d)
 	}
 	return time.Time{}
 }
@@ -89,6 +91,7 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 	weekStart = weekStart.Add(time.Duration(int(d.Sub(weekStart)/cycleLength)) * cycleLength)
 	dayOfD := p.dateOf(d)
 
+outerLoop:
 	for ws := weekStart; end.Before(start) || !end.Before(ws); ws = ws.Add(cycleLength) {
 		for i := 0; i < 7; i++ {
 			dat := ws.Add(time.Duration(i) * day)
@@ -105,12 +108,11 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 				continue
 			}
 			if end.After(start) && dat.After(end) {
-				return time.Time{}
+				break outerLoop
 			}
 			return dat
 		}
 	}
-	// This should not happen...
 	return time.Time{}
 }
 
@@ -146,4 +148,64 @@ func (p Recurrence) ndMonthlyX(d time.Time) time.Time {
 	}
 
 	return time.Time{}
+}
+
+func (p Recurrence) ndMonthly(d time.Time) time.Time {
+	occ, wd := IntToMonthlyPattern(p.Pattern)
+
+	start := p.Start.In(p.Location)
+	startDate := p.dateOf(start)
+	timeOfDay := start.Sub(startDate)
+	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, p.Location)
+	end := p.End.In(p.Location)
+	dStart := d.In(p.Location)
+	if d.Before(start) {
+		dStart = start
+	}
+
+	dy := dStart.Year()
+	dm := int(dStart.Month())
+	sy := start.Year()
+	sm := int(start.Month())
+
+	interval := int(p.Interval)
+
+	monthsBetween := ((dy - sy) * 12) + (dm - sm)
+	monthsToAdd := (monthsBetween / interval) * interval
+
+	dat := start.AddDate(0, monthsToAdd, 0)
+	if dat.Before(p.Start) {
+		dat = dat.AddDate(0, interval, 0)
+	}
+	dStart = dat
+
+	for dat.Weekday() != wd {
+		dat = dat.Add(1 * day)
+	}
+
+	for !dat.After(d) {
+		for i := First; i < occ; i++ {
+			next := dat.Add(7 * day)
+			if next.Month() != dStart.Month() {
+				if occ != Last {
+					dStart = dStart.AddDate(0, interval, 0)
+					dat = dStart
+
+					for dat.Weekday() != wd {
+						dat = dat.Add(1 * day)
+					}
+
+					i = First
+				} else {
+					break
+				}
+			} else {
+				dat = next
+			}
+		}
+	}
+	if !end.Before(p.Start) && end.Before(dat) {
+		return time.Time{}
+	}
+	return dat.Add(timeOfDay)
 }

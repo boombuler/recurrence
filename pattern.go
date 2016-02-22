@@ -39,3 +39,23 @@ func IntToWeeklyPattern(value int) (time.Weekday, []time.Weekday) {
 	firstDay := time.Weekday(value >> 8)
 	return firstDay, result
 }
+
+type Occurrence byte
+
+const (
+	First Occurrence = iota
+	Second
+	Third
+	Forth
+	Last
+)
+
+func MonthlyPatternToInt(occ Occurrence, weekDay time.Weekday) int {
+	return ((int(occ) & 255) << 8) | (int(weekDay) & 255)
+}
+
+func IntToMonthlyPattern(value int) (occ Occurrence, weekDay time.Weekday) {
+	weekDay = time.Weekday(value & 255)
+	occ = Occurrence((value >> 8) & 255)
+	return
+}
