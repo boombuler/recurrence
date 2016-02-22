@@ -154,8 +154,8 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 	occ, wd := IntToMonthlyPattern(p.Pattern)
 
 	start := p.Start.In(p.Location)
-	startDate := p.dateOf(start)
-	timeOfDay := start.Sub(startDate)
+	timeOfDay := start.Sub(p.dateOf(start))
+
 	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, p.Location)
 	end := p.End.In(p.Location)
 	dStart := d.In(p.Location)
@@ -173,37 +173,13 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 	monthsBetween := ((dy - sy) * 12) + (dm - sm)
 	monthsToAdd := (monthsBetween / interval) * interval
 
-	dat := start.AddDate(0, monthsToAdd, 0)
-	if dat.Before(p.Start) {
-		dat = dat.AddDate(0, interval, 0)
-	}
-	dStart = dat
+	start = start.AddDate(0, monthsToAdd, 0)
+	dat := start
 
 	for dat.Weekday() != wd {
 		dat = dat.Add(1 * day)
 	}
 
-	for !dat.After(d) {
-		for i := First; i < occ; i++ {
-			next := dat.Add(7 * day)
-			if next.Month() != dStart.Month() {
-				if occ != Last {
-					dStart = dStart.AddDate(0, interval, 0)
-					dat = dStart
-
-					for dat.Weekday() != wd {
-						dat = dat.Add(1 * day)
-					}
-
-					i = First
-				} else {
-					break
-				}
-			} else {
-				dat = next
-			}
-		}
-	}
 	if !end.Before(p.Start) && end.Before(dat) {
 		return time.Time{}
 	}
