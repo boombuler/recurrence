@@ -176,7 +176,7 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 	start = start.AddDate(0, monthsToAdd, 0)
 	dat := start
 
-	getNthDatyFromMonth := func(dat time.Time) time.Time {
+	getNthDayFromMonth := func(dat time.Time) time.Time {
 		for dat.Weekday() != wd {
 			dat = dat.Add(1 * day)
 		}
@@ -191,9 +191,9 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 		return dat
 	}
 
-	for dat = getNthDatyFromMonth(start); !dat.Add(timeOfDay).After(d) || dat.Add(timeOfDay).Before(p.Start); {
+	for dat = getNthDayFromMonth(start); !dat.Add(timeOfDay).After(d) || dat.Add(timeOfDay).Before(p.Start); {
 		start = start.AddDate(0, interval, 0)
-		dat = getNthDatyFromMonth(start)
+		dat = getNthDayFromMonth(start)
 	}
 
 	if !end.Before(p.Start) && end.Before(dat) {
