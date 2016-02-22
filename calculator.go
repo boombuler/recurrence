@@ -9,10 +9,17 @@ const (
 )
 
 func (p Recurrence) GetNextDate(d time.Time) time.Time {
-	if p.Frequence == 0 {
-		p.Frequence = 1
+	if p.Interval == 0 {
+		p.Interval = 1
 	}
-	switch p.Type {
+	if p.Location == nil {
+		p.Location = time.UTC
+	}
+	switch p.Frequence {
+	case NotRepeating:
+		if p.Start.After(d) {
+			return p.Start.In(p.Location)
+		}
 	case Daily:
 		return p.ndDaily(d)
 	case Weekly:
@@ -43,13 +50,13 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 	dateOfD := p.dateOf(d)
 
 	daysBetween := int(dateOfD.Sub(startDate) / day)
-	freq := int(p.Frequence)
+	freq := int(p.Interval)
 	daysToAdd := (freq - (daysBetween % freq)) % freq
 
 	res := dateOfD.Add(time.Duration(daysToAdd)*day + timeOfDay)
 
 	if !res.After(d) {
-		res = res.Add(time.Duration(p.Frequence) * day)
+		res = res.Add(time.Duration(p.Interval) * day)
 	}
 	if end.After(start) && res.After(end) {
 		return time.Time{}
@@ -75,7 +82,7 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 	if d.Before(weekStart) {
 		d = weekStart
 	}
-	cycleLength := time.Duration(p.Frequence*7) * day
+	cycleLength := time.Duration(p.Interval*7) * day
 
 	// Skip already passed cycles.
 	weekStart = weekStart.Add(time.Duration(int(d.Sub(weekStart)/cycleLength)) * cycleLength)

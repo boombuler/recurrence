@@ -4,11 +4,12 @@ import (
 	"time"
 )
 
-type Type int
+type Frequence int
 
 const (
+	NotRepeating Frequence = iota
 	// Repeat every X days
-	Daily Type = iota
+	Daily
 	// Repeat every X weeks on some of the Week-Days
 	Weekly
 	// Repeat every X months on the n-th day of the month

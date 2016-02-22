@@ -5,8 +5,8 @@ import (
 )
 
 type Recurrence struct {
-	Type      Type
-	Frequence uint
+	Frequence Frequence
+	Interval  uint
 	Pattern   int
 
 	Start    time.Time

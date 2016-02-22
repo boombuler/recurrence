@@ -44,9 +44,9 @@ func TestWeeklyPattern(t *testing.T) {
 
 		Convey("With a weekly recurrence that happens every two weeks on monday and saturday", func() {
 			r := Recurrence{
-				Type:      Weekly,
+				Frequence: Weekly,
 				Location:  local,
-				Frequence: 2, // Every 2 weeks
+				Interval:  2, // Every 2 weeks
 				Pattern:   WeeklyPatternToInt(time.Monday, time.Monday, time.Saturday),
 				Start:     time.Date(2016, 1, 1, 12, 0, 0, 0, local),
 			}
