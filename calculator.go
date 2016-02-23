@@ -32,6 +32,8 @@ func (p Recurrence) GetNextDate(d time.Time) time.Time {
 		return p.ndMonthlyX(d)
 	case Monthly:
 		return p.ndMonthly(d)
+	case Yearly:
+		return p.ndYearly(d)
 	}
 	return time.Time{}
 }
@@ -200,4 +202,35 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 		return time.Time{}
 	}
 	return dat.Add(timeOfDay)
+}
+
+func (p Recurrence) ndYearly(d time.Time) time.Time {
+	start := p.Start.In(p.Location)
+	end := p.End.In(p.Location)
+
+	if d.Before(start) {
+		return start
+	}
+	d = d.In(p.Location)
+
+	interval := int(p.Interval)
+	yearsBetween := d.Year() - start.Year()
+
+	day := start.Day()
+
+	yearsToAdd := (yearsBetween / interval) * interval
+	dat := start.AddDate(yearsToAdd, 0, 0)
+
+	i := 0
+
+	for !dat.After(d) || day != dat.Day() {
+		dat = start.AddDate(yearsToAdd+(i*interval), 0, 0)
+		i += 1
+	}
+
+	if !end.Before(p.Start) && end.Before(dat) {
+		return time.Time{}
+	}
+
+	return dat
 }
