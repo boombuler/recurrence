@@ -46,7 +46,7 @@ const (
 	First Occurrence = iota
 	Second
 	Third
-	Forth
+	Fourth
 	Last
 )
 
