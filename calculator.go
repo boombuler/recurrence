@@ -82,6 +82,9 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 
 	startOfWeek, _ := IntToWeeklyPattern(p.Pattern)
 	days := p.Pattern & 255
+	if days == 0 {
+		return time.Time{}
+	}
 
 	weekStart := startDate.Add(time.Duration(-(7+int(start.Weekday()-startOfWeek))%7) * day)
 	if d.Before(weekStart) {

@@ -81,6 +81,14 @@ func TestWeeklyPattern(t *testing.T) {
 					So(nextEvent, ShouldHappenOn, time.Date(2017, 1, 9, 12, 0, 0, 0, local))
 				})
 			})
+
+			Convey("without any day set", func() {
+				r.Pattern = WeeklyPatternToInt(time.Monday)
+				Convey("there should be no event", func() {
+					nextEvent := r.GetNextDate(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldNotHappen)
+				})
+			})
 		})
 	})
 }
