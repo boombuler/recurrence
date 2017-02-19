@@ -1,12 +1,22 @@
 package recurrence
 
 import (
+	"math"
 	"time"
 )
 
 const (
 	day = 24 * time.Hour
 )
+
+func round(valD time.Duration) int {
+	val := float64(valD)
+	_, div := math.Modf(val)
+	if div >= 0.5 {
+		return int(math.Ceil(val))
+	}
+	return int(math.Floor(val))
+}
 
 func (p Recurrence) GetNextDate(d time.Time) time.Time {
 	if p.Interval == 0 {
@@ -57,14 +67,14 @@ func (p Recurrence) ndDaily(d time.Time) time.Time {
 
 	dateOfD := p.dateOf(d)
 
-	daysBetween := int(dateOfD.Sub(startDate) / day)
+	daysBetween := round(dateOfD.Sub(startDate) / day)
 	freq := int(p.Interval)
 	daysToAdd := (freq - (daysBetween % freq)) % freq
 
-	res := dateOfD.Add(time.Duration(daysToAdd)*day + timeOfDay)
+	res := dateOfD.AddDate(0, 0, daysToAdd).Add(timeOfDay)
 
 	if !res.After(d) {
-		res = res.Add(time.Duration(p.Interval) * day)
+		res = res.AddDate(0, 0, freq)
 	}
 	if end.After(start) && res.After(end) {
 		return time.Time{}
@@ -86,20 +96,22 @@ func (p Recurrence) ndWeekly(d time.Time) time.Time {
 		return time.Time{}
 	}
 
-	weekStart := startDate.Add(time.Duration(-(7+int(start.Weekday()-startOfWeek))%7) * day)
+	offset := -(7 + int(start.Weekday()-startOfWeek)) % 7
+
+	weekStart := startDate.AddDate(0, 0, offset)
 	if d.Before(weekStart) {
 		d = weekStart
 	}
 	cycleLength := time.Duration(p.Interval*7) * day
 
 	// Skip already passed cycles.
-	weekStart = weekStart.Add(time.Duration(int(d.Sub(weekStart)/cycleLength)) * cycleLength)
+	weekStart = p.dateOf(weekStart.Add(time.Duration(int(d.Sub(weekStart)/cycleLength)) * cycleLength))
 	dayOfD := p.dateOf(d)
 
 outerLoop:
-	for ws := weekStart; end.Before(start) || !end.Before(ws); ws = ws.Add(cycleLength) {
+	for ws := weekStart; end.Before(start) || !end.Before(ws); ws = ws.AddDate(0, 0, int(p.Interval*7)) {
 		for i := 0; i < 7; i++ {
-			dat := ws.Add(time.Duration(i) * day)
+			dat := ws.AddDate(0, 0, i)
 			if dat.Before(dayOfD) || dat.Before(startDate) {
 				continue
 			}
@@ -183,11 +195,11 @@ func (p Recurrence) ndMonthly(d time.Time) time.Time {
 
 	getNthDayFromMonth := func(dat time.Time) time.Time {
 		for dat.Weekday() != wd {
-			dat = dat.Add(1 * day)
+			dat = dat.AddDate(0, 0, 1)
 		}
 
 		for i := Second; i <= occ; i++ {
-			next := dat.Add(7 * day)
+			next := dat.AddDate(0, 0, 7)
 			if next.Month() != dat.Month() {
 				return dat
 			}
