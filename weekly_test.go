@@ -72,6 +72,10 @@ func TestWeeklyPattern(t *testing.T) {
 					nextEvent := r.GetNextDate(time.Date(2016, 2, 7, 0, 0, 0, 0, time.UTC))
 					So(nextEvent, ShouldHappenOn, time.Date(2016, 2, 8, 12, 0, 0, 0, local))
 				})
+				Convey("the time after the change to DST should stay the same", func() {
+					nextEvent := r.GetNextDate(time.Date(2016, 3, 26, 15, 0, 0, 0, time.UTC))
+					So(nextEvent, ShouldHappenOn, time.Date(2016, 4, 4, 12, 0, 0, 0, local))
+				})
 			})
 
 			Convey("without an enddate", func() {
