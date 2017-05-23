@@ -121,7 +121,7 @@ outerLoop:
 				continue
 			}
 			dat = dat.Add(timeOfDay)
-			if dat.Before(d) {
+			if !dat.After(d) {
 				continue
 			}
 			if end.After(start) && dat.After(end) {
