@@ -65,7 +65,7 @@ func TestWeeklyPattern(t *testing.T) {
 					So(nextEvent, ShouldHappenOn, time.Date(2016, 1, 2, 12, 0, 0, 0, local))
 				})
 				Convey("the second event 11th january", func() {
-					nextEvent := r.GetNextDate(time.Date(2016, 1, 2, 13, 0, 0, 0, time.UTC))
+					nextEvent := r.GetNextDate(time.Date(2016, 1, 2, 12, 0, 0, 0, time.UTC))
 					So(nextEvent, ShouldHappenOn, time.Date(2016, 1, 11, 12, 0, 0, 0, local))
 				})
 				Convey("there should be another event on 12th feburary", func() {
